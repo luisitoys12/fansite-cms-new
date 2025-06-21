@@ -1,82 +1,63 @@
 <?php
-require "includes/config.php";
-require "includes/header.php";
-require "includes/alerte.php";
-
-
-$db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_general_ci'");
+//  :¨·.·¨: 
+//  `·.  Discord : Hasanx ★°*ﾟ
 ?>
+
+<?php require "includes/config.php"; ?>
+<?php require "includes/header.php"; ?>
+<?php require "includes/alerte.php"; ?>
+
 <div class="container" style="margin-top:20px;">
   <div class="row">
-    <div class="col-sm-12">
+    <div class="col-md-12">
       <div class="panel panel-default">
-        <?php
-        try {
-          $ranks_query = $db->query("SELECT id, name, level FROM rank");
-          if (!$ranks_query) {
-            throw new Exception("Rütbe sorgusu başarısız: " . $db->errorInfo()[2]);
-          }
-          $ranks = [];
-          while ($rank = $ranks_query->fetch(PDO::FETCH_ASSOC)) {
-            $ranks[$rank['level']] = $rank['name']; // level ile name eşleştir
-          }
-
-          // Bölüm tanımlamaları (level değerlerine göre)
-          $sections = [
-            'Yönetim' => [8, 9, 10, 11, 12],
-            'Yönetici' => [5, 6, 7],
-            'Yazar' => [3, 4]
+        <div class="panel-heading" id="bg-panel" style="border-radius:3px;">¡Nuestro equipo!</div>
+        <div class="panel-body" id="body-panel">
+          <?php
+          $secciones = [
+            'Administración' => [8, 9, 10, 11, 12],
+            'Administradores' => [5, 6, 7],
+            'Redacción' => [3, 4]
           ];
-
-          foreach ($sections as $section_name => $staff_levels) {
-        ?>
-            <div class="panel-body" id="body-panel">
-              <div class="panel-heading" id="bg-panel"><?= htmlspecialchars($section_name) ?></div>
-              <div style="margin-top:13px;"></div>
-              <?php
-              // Kullanıcıları staff (level) değerlerine göre çek
-              $placeholders = implode(',', array_fill(0, count($staff_levels), '?'));
-              $users_query = $db->prepare("SELECT id, username, staff 
-                                          FROM users 
-                                          WHERE staff IN ($placeholders) 
-                                          ORDER BY staff DESC");
-              $users_query->execute($staff_levels);
-              $users = $users_query->fetchAll(PDO::FETCH_ASSOC);
-
-              if (empty($users)) {
-                echo '<div class="alert alert-info">Bu bölüm yetkili yok.</div>';
-              } else {
-                foreach ($users as $user) {
-                  $rank_name = isset($ranks[$user['staff']]) ? $ranks[$user['staff']] : 'Bilinmeyen Rütbe';
-              ?>
-                  <div class="schedule-comment" style="float:left">
-                    <div class="habbo-comment">
-                      <img style="margin-bottom:10px; margin-left:10px;" 
-                           src="https://www.habbo.com.tr/habbo-imaging/avatarimage?hb=image&user=<?= htmlspecialchars($user['username']) ?>&headonly=1&direction=2&head_direction=3&action=&gesture=&size=m" 
-                           alt="<?= htmlspecialchars($user['username']) ?> avatar"
-                           onerror="this.src='/images/default-avatar.png'">
-                      <div class="info-habbo-comment">
-                        <b><?= htmlspecialchars($user['username']) ?></b>
-                        <br>
-                        <span style="color: red;">
-                          <?= htmlspecialchars($rank_name) ?>
-                        </span>
-                      </div>
-                    </div>
+          foreach ($secciones as $nombre => $grupos) {
+            echo "<h3>$nombre</h3>";
+            $usuarios = $db->query("SELECT * FROM users WHERE staff IN (" . implode(',', $grupos) . ") ORDER BY staff DESC, username ASC");
+            if ($usuarios->rowCount() > 0) {
+              echo '<div class="row">';
+              while ($user = $usuarios->fetch()) {
+                ?>
+                <div class="col-sm-2 text-center" style="margin-bottom:20px;">
+                  <img class="img-circle" src="https://www.habbo.com.tr/habbo-imaging/avatarimage?user=<?= $user['username'] ?>&action=std&direction=3&head_direction=3&gesture=sml&size=l" alt="<?= $user['username'] ?>" style="width:80px;height:80px;">
+                  <div><strong><?= $user['username'] ?></strong></div>
+                  <div>
+                    <?php 
+                    switch ($user['staff']) {
+                      case 3: echo "Corrector"; break;
+                      case 4: echo "Redactor"; break;
+                      case 5: echo "Administrador"; break;
+                      case 6: echo "Responsable Especial"; break;
+                      case 7: echo "Jefe de Redacción"; break;
+                      case 8: echo "Administrador"; break;
+                      case 9: echo "Desarrollador"; break;
+                      case 10: echo "Fundador"; break;
+                      case 11: echo "Director"; break;
+                      case 12: echo "Creador"; break;
+                    }
+                    ?>
                   </div>
-              <?php
-                }
+                </div>
+                <?php
               }
-              ?>
-            </div>
-        <?php
+              echo '</div>';
+            } else {
+              echo '<div class="alert alert-info">No hay responsables en esta sección.</div>';
+            }
           }
-        } catch (Exception $e) {
-          echo '<div class="alert alert-danger">Hata: ' . htmlspecialchars($e->getMessage()) . '</div>';
-        }
-        ?>
+          ?>
+        </div>
       </div>
     </div>
   </div>
 </div>
 <?php require "includes/footer.php"; ?>
+</html>
